@@ -19,6 +19,7 @@
 </head>
 
 <body>
+    <div id="container"></div>
     <div id="info">
         Simple Cloth Simulation<br />
         Verlet integration with relaxed constraints<br />
@@ -41,7 +42,7 @@
         container.appendChild( stats.dom )
 
         renderer = new THREE.WebGLRenderer({ antialias: true })
-        renderer.setPixelRatio( window.devicePixelRatio )
+        renderer.setPixelRatio( window.devicePixelRatio )  // 设置屏幕的像素比
         renderer.setSize( window.innerWidth, window.innerHeight )
         renderer.outputEncoding = THREE.sRGBEncoding
         container.appendChild( renderer.domElement )
@@ -55,8 +56,8 @@
         controls = new OrbitControls( camera, renderer.domElement )
         controls.target.set( 0, 0.5, 0 )
         controls.update()
-        controls.enablePan = false
-        controls.enableDamping = true
+        controls.enablePan = false      // 相机移动
+        controls.enableDamping = true  // 给相机一个重量 必须调用update在你的animation中
 
         scene.add( new THREE.HemisphereLight( 0xffffff, 0x000000, 0.4 ) )
 
@@ -64,7 +65,7 @@
         dirLight.position.set( 5, 2, 8 )
         scene.add( dirLight )
 
-        var path = 'textures/cube/Parks/'
+        var path = '/textures/cube/Park2/'
         var format = '.jpg'
         var envMap = new THREE.CubeTextureLoader().load([
             path + 'posx' + format, path + 'negx' + format,
@@ -73,11 +74,11 @@
         ])
 
         var dracoLoader = new DRACOLoader()
-        dracoLoader.setDecoderPath('js/libs/draco/gltf/')
+        dracoLoader.setDecoderPath('/js/libs/draco/gltf/')
 
         var loader = new GLTFLoader()
-        loader.setDRACOLoader()
-        loader.load('models/gltf/LittlestTokyo.glb', function( gltf ) {
+        loader.setDRACOLoader(dracoLoader)
+        loader.load('/models/gltf/LittlestTokyo.glb', function( gltf ) {
             var model = gltf.scene
             model.position.set(1, 1, 0)
             model.scale.set( 0.01, 0.01, 0.01 )
@@ -87,6 +88,7 @@
 
             scene.add( model )
 
+            // 获取模型动画  播放
             mixer = new THREE.AnimationMixer( model )
             mixer.clipAction( gltf.animations[0] ).play()
 
@@ -112,7 +114,7 @@
 
             stats.update()
 
-            renderer.render()
+            renderer.render(scene, camera)
         }
     </script>
 </body>
