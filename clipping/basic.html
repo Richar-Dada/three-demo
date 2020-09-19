@@ -17,7 +17,7 @@
         import Stats from '../js/stats.module.js'
         import { GUI } from '../js/dat.gui.module.js'
         
-        import { orbitControls } from '../js/orbitControl.js'
+        import { OrbitControls } from '../js/orbitControls.js'
 
         var camera, scene, renderer, startTime, object, stats
 
@@ -34,6 +34,7 @@
 
             scene.add( new THREE.AmbientLight( 0x505050 ) )
 
+            // 设置点光和阴影大小
             var spotLight = new THREE.SpotLight( 0xffffff )
             spotLight.angle = Math.PI / 5
             spotLight.penumbra = 0.2
@@ -64,21 +65,23 @@
             var localPlane = new THREE.Plane( new THREE.Vector3( 0, -1, 0 ), 0.8 )
             var globalPlane = new THREE.Plane( new THREE.Vector3( -1, 0, 0 ), 0.1 )
 
-
+            // 设置material
             var material = new THREE.MeshPhongMaterial({
                 color: 0x80ee10,
                 shininess: 100,
                 side: THREE.DoubleSide,
-                clippingPlanes: [ localPlane ],
+                clippingPlanes: [ localPlane ],  // 设置裁剪的plane  render.localClippingEnabled为true时就会找这个字段取值 没有则报错
                 clipShadows: true
             })
 
+            // 创建曲管
             var geometry = new THREE.TorusKnotBufferGeometry( 0.4, 0.08, 95, 20 )
 
             object = new THREE.Mesh( geometry, material )
             object.castShadow = true
             scene.add( object )
 
+            // 创建底板
             var ground = new THREE.Mesh(
                 new THREE.PlaneBufferGeometry( 9, 9, 1, 1 ),
                 new THREE.MeshPhongMaterial( { color: 0xa0adaf, shininess: 150 } )
@@ -99,10 +102,11 @@
             document.body.appendChild( renderer.domElement )
 
 
+            // 设置裁剪
             var globalPlanes = [ globalPlane ]
             var Empty = Object.freeze( [] )
-            renderer.clippingPlanes = Empty
-            renderer.localClippingEnabled = true
+            renderer.clippingPlanes = Empty // 这个是全局裁剪 跟local有点不一样  通知设置值来判断是否裁剪
+            renderer.localClippingEnabled = true  // 设置是否裁剪
 
 
             var controls = new OrbitControls( camera, renderer.domElement )
@@ -132,7 +136,7 @@
                     localPlane.constant = v
                 }
 
-            }
+            },
 
             folderGlobal = gui.addFolder( 'Global Clipping' ),
             propsGlobal = {
