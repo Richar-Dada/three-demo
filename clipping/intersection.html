@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script type="module">
+
+        import * as THREE from '../js/three.module.js'
+
+        import { GUI } from '../jsm/libs/dat.gui.module.js'
+
+        import { OrbitControls } from '../js/orbitControls.js'
+
+        var camera, scene, renderer
+
+        var params = {
+            clipIntersection: true,
+            planeConstant: 0,
+            showHelpers: false
+        }
+
+        // 建立三个裁切面
+        var clipPlanes = [
+            new THREE.Plane( new THREE.Vector3( 1, 0, 0 ), 0 ),
+            new THREE.Plane( new THREE.Vector3( 0, -1, 0 ), 0 ),
+            new THREE.Plane( new THREE.Vector3( 0, 0, -1 ), 0 )
+        ]
+
+        init()
+        render()
+
+        function init() {
+
+            renderer = new THREE.WebGLRenderer({ antialias: true })
+            renderer.setPixelRatio( window.devicePixelRatio )
+            renderer.setSize( window.innerWidth, window.innerHeight )
+            renderer.localClippingEnabled = true
+            document.body.appendChild( renderer.domElement )
+
+            scene = new THREE.Scene()
+
+            camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 200 )
+
+            camera.position.set( -1.5, 2.5, 3.0 )
+
+            // 设置orbitControls
+            var controls = new OrbitControls( camera, renderer.domElement )
+            controls.addEventListener( 'change', render )
+            controls.minDistance = 1
+            controls.maxDistance = 10
+            controls.enablePan = false
+
+            // 设置半球光
+            var light = new THREE.HemisphereLight( 0xffffff, 0x080808, 1.5 )
+            light.position.set( -1.25, 1, 1.25 )
+            scene.add( light )
+
+            // 建一个30层的球
+            var group = new THREE.Group()
+            
+            for( var i = 0; i < 30; i += 2 ) {
+
+                var geometry = new THREE.SphereBufferGeometry( i / 30, 48, 24 )
+
+                var material = new THREE.MeshLambertMaterial({
+
+                    color: new THREE.Color().setHSL( Math.random(), 0.5, 0.5 ),
+                    side: THREE.DoubleSide,
+                    clippingPlanes: clipPlanes,
+                    clipIntersection: params.clipIntersection
+
+                })
+
+                group.add( new THREE.Mesh( geometry, material ) )
+
+            }
+
+            scene.add( group )
+
+            // 添加面helper
+            var helpers = new THREE.Group()
+            helpers.add( new THREE.PlaneHelper( clipPlanes[0], 2, 0xff0000 ) )
+            helpers.add( new THREE.PlaneHelper( clipPlanes[1], 2, 0x00ff00 ) )
+            helpers.add( new THREE.PlaneHelper( clipPlanes[2], 2, 0x0000ff ) )
+            helpers.visible = false
+            scene.add( helpers )
+
+
+            var gui = new GUI()
+
+            gui.add( params, 'clipIntersection' ).name( 'clip intersection' ).onChange( function( value ) {
+                
+                var children = group.children
+
+                for( var i = 0; i < children.length; i++ ) {
+
+                    children[i].material.clipIntersection = value
+
+                }
+
+                render()
+
+            } )
+
+            gui.add( params, 'planeConstant', - 1, 1 ).step( 0.01 ).name( 'plane constant' ).onChange( function ( value ) {
+
+                for ( var j = 0; j < clipPlanes.length; j ++ ) {
+
+                    clipPlanes[ j ].constant = value;
+
+                }
+
+                render();
+
+            } );
+
+            gui.add( params, 'showHelpers' ).name( 'show helpers' ).onChange( function(value) {
+
+                helpers.visible = value
+
+                render()
+
+            } )
+
+
+            window.addEventListener( 'resize', onWindowResize, false )
+        }
+
+        function onWindowResize() {
+
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+
+            renderer.setSize( window.innerWidth, window.innerHeight );
+
+            render();
+
+        }
+
+        function render() {
+
+            renderer.render( scene, camera );
+
+        }
+
+
+    </script>
+</body>
+</html>
